@@ -2,7 +2,6 @@
 
 A full-stack Banking Management System built as a semester project.
 
-**GitHub:** [https://github.com/notm33na/Banking-System](https://github.com/notm33na/Banking-System)
 
 ---
 
