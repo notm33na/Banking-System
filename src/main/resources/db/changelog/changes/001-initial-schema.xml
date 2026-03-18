@@ -1,0 +1,895 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- ================================================================== -->
+    <!-- 1. USERS                                                           -->
+    <!-- ================================================================== -->
+    <changeSet id="001-create-users" author="virtbank">
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="user_type" type="VARCHAR(20)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_verified" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <createIndex tableName="users" indexName="idx_users_email">
+            <column name="email"/>
+        </createIndex>
+        <createIndex tableName="users" indexName="idx_users_user_type">
+            <column name="user_type"/>
+        </createIndex>
+        <createIndex tableName="users" indexName="idx_users_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 2. ROLES                                                           -->
+    <!-- ================================================================== -->
+    <changeSet id="002-create-roles" author="virtbank">
+        <createTable tableName="roles">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 3. USER_ROLES (junction)                                           -->
+    <!-- ================================================================== -->
+    <changeSet id="003-create-user-roles" author="virtbank">
+        <createTable tableName="user_roles">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role_id"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_roles_user"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="role_id"
+                                 referencedTableName="roles" referencedColumnNames="id"
+                                 constraintName="fk_user_roles_role"/>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 4. USER_PROFILES                                                   -->
+    <!-- ================================================================== -->
+    <changeSet id="004-create-user-profiles" author="virtbank">
+        <createTable tableName="user_profiles">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="address_line1" type="VARCHAR(255)"/>
+            <column name="address_line2" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="state" type="VARCHAR(100)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="country" type="VARCHAR(100)"/>
+            <column name="date_of_birth" type="DATE"/>
+            <column name="ssn_last4" type="VARCHAR(4)"/>
+            <column name="profile_picture_url" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="user_profiles" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_profiles_user"/>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 5. ACCOUNTS                                                        -->
+    <!-- ================================================================== -->
+    <changeSet id="005-create-accounts" author="virtbank">
+        <createTable tableName="accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_number" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance" type="DECIMAL(19,4)" defaultValueNumeric="0.0000">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="USD">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_name" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="accounts" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_accounts_user"/>
+        <createIndex tableName="accounts" indexName="idx_accounts_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="accounts" indexName="idx_accounts_account_number">
+            <column name="account_number"/>
+        </createIndex>
+        <createIndex tableName="accounts" indexName="idx_accounts_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 6. TRANSACTIONS                                                    -->
+    <!-- ================================================================== -->
+    <changeSet id="006-create-transactions" author="virtbank">
+        <createTable tableName="transactions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="reference_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance_after" type="DECIMAL(19,4)"/>
+            <column name="currency" type="VARCHAR(3)" defaultValue="USD"/>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_account_id" type="BIGINT"/>
+            <column name="destination_account_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="transactions" baseColumnNames="account_id"
+                                 referencedTableName="accounts" referencedColumnNames="id"
+                                 constraintName="fk_transactions_account"/>
+        <addForeignKeyConstraint baseTableName="transactions" baseColumnNames="source_account_id"
+                                 referencedTableName="accounts" referencedColumnNames="id"
+                                 constraintName="fk_transactions_source_account"/>
+        <addForeignKeyConstraint baseTableName="transactions" baseColumnNames="destination_account_id"
+                                 referencedTableName="accounts" referencedColumnNames="id"
+                                 constraintName="fk_transactions_dest_account"/>
+        <createIndex tableName="transactions" indexName="idx_transactions_account_id">
+            <column name="account_id"/>
+        </createIndex>
+        <createIndex tableName="transactions" indexName="idx_transactions_type">
+            <column name="transaction_type"/>
+        </createIndex>
+        <createIndex tableName="transactions" indexName="idx_transactions_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="transactions" indexName="idx_transactions_created_at">
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="transactions" indexName="idx_transactions_reference">
+            <column name="reference_number"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 7. LOANS                                                           -->
+    <!-- ================================================================== -->
+    <changeSet id="007-create-loans" author="virtbank">
+        <createTable tableName="loans">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="loan_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="interest_rate" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="term_months" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="monthly_payment" type="DECIMAL(19,4)"/>
+            <column name="outstanding_balance" type="DECIMAL(19,4)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purpose" type="VARCHAR(500)"/>
+            <column name="approved_by" type="BIGINT"/>
+            <column name="approved_at" type="TIMESTAMP"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="loans" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_loans_user"/>
+        <addForeignKeyConstraint baseTableName="loans" baseColumnNames="account_id"
+                                 referencedTableName="accounts" referencedColumnNames="id"
+                                 constraintName="fk_loans_account"/>
+        <addForeignKeyConstraint baseTableName="loans" baseColumnNames="approved_by"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_loans_approved_by"/>
+        <createIndex tableName="loans" indexName="idx_loans_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="loans" indexName="idx_loans_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 8. LOAN_PAYMENTS                                                   -->
+    <!-- ================================================================== -->
+    <changeSet id="008-create-loan-payments" author="virtbank">
+        <createTable tableName="loan_payments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="loan_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="principal" type="DECIMAL(19,4)"/>
+            <column name="interest" type="DECIMAL(19,4)"/>
+            <column name="payment_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="due_date" type="DATE"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="loan_payments" baseColumnNames="loan_id"
+                                 referencedTableName="loans" referencedColumnNames="id"
+                                 constraintName="fk_loan_payments_loan"/>
+        <createIndex tableName="loan_payments" indexName="idx_loan_payments_loan_id">
+            <column name="loan_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 9. KYC_DOCUMENTS                                                   -->
+    <!-- ================================================================== -->
+    <changeSet id="009-create-kyc-documents" author="virtbank">
+        <createTable tableName="kyc_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_url" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_number" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejection_reason" type="VARCHAR(500)"/>
+            <column name="reviewed_by" type="BIGINT"/>
+            <column name="reviewed_at" type="TIMESTAMP"/>
+            <column name="expiry_date" type="DATE"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="kyc_documents" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_kyc_documents_user"/>
+        <addForeignKeyConstraint baseTableName="kyc_documents" baseColumnNames="reviewed_by"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_kyc_documents_reviewer"/>
+        <createIndex tableName="kyc_documents" indexName="idx_kyc_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="kyc_documents" indexName="idx_kyc_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 10. DOCUMENTS                                                      -->
+    <!-- ================================================================== -->
+    <changeSet id="010-create-documents" author="virtbank">
+        <createTable tableName="documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type" type="VARCHAR(50)"/>
+            <column name="file_url" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_size" type="BIGINT"/>
+            <column name="mime_type" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="documents" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_documents_user"/>
+        <createIndex tableName="documents" indexName="idx_documents_user_id">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 11. SUPPORT_TICKETS                                                -->
+    <!-- ================================================================== -->
+    <changeSet id="011-create-support-tickets" author="virtbank">
+        <createTable tableName="support_tickets">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)" defaultValue="MEDIUM">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="OPEN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_to" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="closed_at" type="TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="support_tickets" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_support_tickets_user"/>
+        <addForeignKeyConstraint baseTableName="support_tickets" baseColumnNames="assigned_to"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_support_tickets_assigned"/>
+        <createIndex tableName="support_tickets" indexName="idx_tickets_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="support_tickets" indexName="idx_tickets_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="support_tickets" indexName="idx_tickets_priority">
+            <column name="priority"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 12. TICKET_MESSAGES                                                -->
+    <!-- ================================================================== -->
+    <changeSet id="012-create-ticket-messages" author="virtbank">
+        <createTable tableName="ticket_messages">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ticket_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="ticket_messages" baseColumnNames="ticket_id"
+                                 referencedTableName="support_tickets" referencedColumnNames="id"
+                                 constraintName="fk_ticket_messages_ticket"/>
+        <addForeignKeyConstraint baseTableName="ticket_messages" baseColumnNames="sender_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_ticket_messages_sender"/>
+        <createIndex tableName="ticket_messages" indexName="idx_ticket_messages_ticket">
+            <column name="ticket_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 13. NOTIFICATIONS                                                  -->
+    <!-- ================================================================== -->
+    <changeSet id="013-create-notifications" author="virtbank">
+        <createTable tableName="notifications">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="message" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_read" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="notifications" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_notifications_user"/>
+        <createIndex tableName="notifications" indexName="idx_notifications_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="notifications" indexName="idx_notifications_is_read">
+            <column name="is_read"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 14. ALERTS                                                         -->
+    <!-- ================================================================== -->
+    <changeSet id="014-create-alerts" author="virtbank">
+        <createTable tableName="alerts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="VARCHAR(20)" defaultValue="INFO">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="TEXT"/>
+            <column name="is_read" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="alerts" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_alerts_user"/>
+        <createIndex tableName="alerts" indexName="idx_alerts_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="alerts" indexName="idx_alerts_is_read">
+            <column name="is_read"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 15. AUDIT_LOGS                                                     -->
+    <!-- ================================================================== -->
+    <changeSet id="015-create-audit-logs" author="virtbank">
+        <createTable tableName="audit_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="action" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_type" type="VARCHAR(50)"/>
+            <column name="entity_id" type="BIGINT"/>
+            <column name="old_value" type="TEXT"/>
+            <column name="new_value" type="TEXT"/>
+            <column name="ip_address" type="VARCHAR(45)"/>
+            <column name="user_agent" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="audit_logs" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_audit_logs_user"/>
+        <createIndex tableName="audit_logs" indexName="idx_audit_logs_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="audit_logs" indexName="idx_audit_logs_action">
+            <column name="action"/>
+        </createIndex>
+        <createIndex tableName="audit_logs" indexName="idx_audit_logs_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 16. BUSINESSES                                                     -->
+    <!-- ================================================================== -->
+    <changeSet id="016-create-businesses" author="virtbank">
+        <createTable tableName="businesses">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="registration_number" type="VARCHAR(100)">
+                <constraints unique="true"/>
+            </column>
+            <column name="business_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="industry" type="VARCHAR(100)"/>
+            <column name="tax_id" type="VARCHAR(50)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="businesses" baseColumnNames="owner_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_businesses_owner"/>
+        <createIndex tableName="businesses" indexName="idx_businesses_owner_id">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 17. BUSINESS_MEMBERS                                               -->
+    <!-- ================================================================== -->
+    <changeSet id="017-create-business-members" author="virtbank">
+        <createTable tableName="business_members">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="business_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="business_members" baseColumnNames="business_id"
+                                 referencedTableName="businesses" referencedColumnNames="id"
+                                 constraintName="fk_business_members_business"/>
+        <addForeignKeyConstraint baseTableName="business_members" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_business_members_user"/>
+        <addUniqueConstraint tableName="business_members" columnNames="business_id, user_id"
+                             constraintName="uq_business_member"/>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 18. PAYROLLS                                                       -->
+    <!-- ================================================================== -->
+    <changeSet id="018-create-payrolls" author="virtbank">
+        <createTable tableName="payrolls">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="business_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pay_period_start" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pay_period_end" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="DECIMAL(19,4)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="payrolls" baseColumnNames="business_id"
+                                 referencedTableName="businesses" referencedColumnNames="id"
+                                 constraintName="fk_payrolls_business"/>
+        <addForeignKeyConstraint baseTableName="payrolls" baseColumnNames="created_by"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_payrolls_creator"/>
+        <createIndex tableName="payrolls" indexName="idx_payrolls_business_id">
+            <column name="business_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 19. PAYROLL_ITEMS                                                  -->
+    <!-- ================================================================== -->
+    <changeSet id="019-create-payroll-items" author="virtbank">
+        <createTable tableName="payroll_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="payroll_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_account" type="VARCHAR(20)"/>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="payroll_items" baseColumnNames="payroll_id"
+                                 referencedTableName="payrolls" referencedColumnNames="id"
+                                 constraintName="fk_payroll_items_payroll"/>
+        <createIndex tableName="payroll_items" indexName="idx_payroll_items_payroll_id">
+            <column name="payroll_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 20. BULK_TRANSACTIONS                                              -->
+    <!-- ================================================================== -->
+    <changeSet id="020-create-bulk-transactions" author="virtbank">
+        <createTable tableName="bulk_transactions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="business_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="initiated_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="total_amount" type="DECIMAL(19,4)"/>
+            <column name="total_count" type="INT"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="processed_at" type="TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="bulk_transactions" baseColumnNames="business_id"
+                                 referencedTableName="businesses" referencedColumnNames="id"
+                                 constraintName="fk_bulk_transactions_business"/>
+        <addForeignKeyConstraint baseTableName="bulk_transactions" baseColumnNames="initiated_by"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_bulk_transactions_initiator"/>
+        <createIndex tableName="bulk_transactions" indexName="idx_bulk_tx_business_id">
+            <column name="business_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 21. BULK_TRANSACTION_ITEMS                                         -->
+    <!-- ================================================================== -->
+    <changeSet id="021-create-bulk-transaction-items" author="virtbank">
+        <createTable tableName="bulk_transaction_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="bulk_transaction_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_account" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_name" type="VARCHAR(200)"/>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reference" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="bulk_transaction_items" baseColumnNames="bulk_transaction_id"
+                                 referencedTableName="bulk_transactions" referencedColumnNames="id"
+                                 constraintName="fk_bulk_tx_items_bulk_tx"/>
+        <createIndex tableName="bulk_transaction_items" indexName="idx_bulk_tx_items_bulk_id">
+            <column name="bulk_transaction_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 22. INVOICES                                                       -->
+    <!-- ================================================================== -->
+    <changeSet id="022-create-invoices" author="virtbank">
+        <createTable tableName="invoices">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="business_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invoice_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="customer_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_email" type="VARCHAR(255)"/>
+            <column name="due_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtotal" type="DECIMAL(19,4)"/>
+            <column name="tax_amount" type="DECIMAL(19,4)"/>
+            <column name="total_amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="invoices" baseColumnNames="business_id"
+                                 referencedTableName="businesses" referencedColumnNames="id"
+                                 constraintName="fk_invoices_business"/>
+        <createIndex tableName="invoices" indexName="idx_invoices_business_id">
+            <column name="business_id"/>
+        </createIndex>
+        <createIndex tableName="invoices" indexName="idx_invoices_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="invoices" indexName="idx_invoices_due_date">
+            <column name="due_date"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 23. INVOICE_ITEMS                                                  -->
+    <!-- ================================================================== -->
+    <changeSet id="023-create-invoice-items" author="virtbank">
+        <createTable tableName="invoice_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="invoice_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="INT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="invoice_items" baseColumnNames="invoice_id"
+                                 referencedTableName="invoices" referencedColumnNames="id"
+                                 constraintName="fk_invoice_items_invoice"/>
+        <createIndex tableName="invoice_items" indexName="idx_invoice_items_invoice_id">
+            <column name="invoice_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ================================================================== -->
+    <!-- 24. INVESTMENTS                                                    -->
+    <!-- ================================================================== -->
+    <changeSet id="024-create-investments" author="virtbank">
+        <createTable tableName="investments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="investment_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="symbol" type="VARCHAR(20)"/>
+            <column name="name" type="VARCHAR(200)"/>
+            <column name="quantity" type="DECIMAL(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchase_price" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_price" type="DECIMAL(19,4)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchased_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sold_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="investments" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_investments_user"/>
+        <addForeignKeyConstraint baseTableName="investments" baseColumnNames="account_id"
+                                 referencedTableName="accounts" referencedColumnNames="id"
+                                 constraintName="fk_investments_account"/>
+        <createIndex tableName="investments" indexName="idx_investments_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="investments" indexName="idx_investments_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

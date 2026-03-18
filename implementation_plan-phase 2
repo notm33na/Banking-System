@@ -1,0 +1,85 @@
+# Phase 2: Spring Security + Authentication API
+
+## Overview
+
+Wire JWT-based stateless auth on top of the existing User/Role entities. Three roles: `ROLE_ADMIN`, `ROLE_CUSTOMER`, `ROLE_BUSINESS`.
+
+## Proposed Changes
+
+### Security Package (`com.virtbank.security`)
+
+#### [NEW] JwtUtils.java
+- `generateToken(userId, email, role)` → signed HS256 JWT via jjwt
+- `validateToken(token)` → boolean
+- `extractEmail(token)`, `extractUserId(token)` — claim getters
+- Reads `app.jwt.secret` and `app.jwt.expiration-ms` from properties
+
+#### [NEW] JwtAuthFilter.java
+- `OncePerRequestFilter` — reads `Authorization: Bearer <token>` header
+- Validates via JwtUtils, loads `UserDetails`, sets `SecurityContext`
+
+#### [NEW] UserDetailsServiceImpl.java
+- Implements `UserDetailsService`, loads by email via [UserRepository](file:///d:/javaproj/src/main/java/com/virtbank/repository/UserRepository.java#14-34)
+- Maps User's M2M Role set → `GrantedAuthority` list (e.g. `ROLE_CUSTOMER`)
+
+---
+
+### Config Package (`com.virtbank.config`)
+
+#### [NEW] SecurityConfig.java
+- `@EnableMethodSecurity` for `@PreAuthorize`
+- Disable CSRF, stateless sessions
+- Permit: `/api/auth/**`, `/swagger-ui/**`, `/api-docs/**`
+- All other endpoints require authentication
+- Registers `JwtAuthFilter` before `UsernamePasswordAuthenticationFilter`
+- Beans: `BCryptPasswordEncoder`, `AuthenticationManager`
+
+---
+
+### DTO Package (`com.virtbank.dto`)
+
+#### [NEW] RegisterRequest.java
+Fields: `firstName`, `lastName`, `email`, `password`, `phone`, `userType` (with `@NotBlank`/`@Email` validation)
+
+#### [NEW] LoginRequest.java
+Fields: `email`, `password`
+
+#### [NEW] AuthResponse.java
+Fields: `token`, `userId`, `email`, `role`
+
+---
+
+### Controller Package (`com.virtbank.controller`)
+
+#### [NEW] AuthController.java
+- `POST /api/auth/register` — validate, hash password, save user w/ role, return JWT
+- `POST /api/auth/login` — authenticate via `AuthenticationManager`, return JWT
+
+#### [NEW] TestController.java
+- `GET /api/test/public` — open endpoint
+- `GET /api/test/customer` — `@PreAuthorize("hasRole('CUSTOMER')")`
+- `GET /api/test/admin` — `@PreAuthorize("hasRole('ADMIN')")`
+
+---
+
+### Exception Package (`com.virtbank.exception`)
+
+#### [NEW] GlobalExceptionHandler.java
+- Catches: `BadCredentialsException` → 401, `UsernameNotFoundException` → 401, `MethodArgumentNotValidException` → 400, generic `Exception` → 500
+- Returns JSON: `{ "status": 401, "error": "...", "message": "...", "timestamp": "..." }`
+
+#### [NEW] ErrorResponse.java
+DTO for error JSON body.
+
+---
+
+### Liquibase — Seed Roles
+
+#### [NEW] 002-seed-roles.xml
+Insert `ROLE_ADMIN`, `ROLE_CUSTOMER`, `ROLE_BUSINESS` into `roles` table.
+
+---
+
+## Verification Plan
+1. `mvn clean compile` — zero errors
+2. Postman tests: register → login → access protected endpoints with/without token

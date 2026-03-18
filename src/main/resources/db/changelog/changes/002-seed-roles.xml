@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Seed the three application roles -->
+    <changeSet id="002-seed-roles" author="virtbank">
+        <insert tableName="roles">
+            <column name="name" value="ROLE_ADMIN"/>
+            <column name="description" value="Administrator with full system access"/>
+        </insert>
+        <insert tableName="roles">
+            <column name="name" value="ROLE_CUSTOMER"/>
+            <column name="description" value="Personal banking customer"/>
+        </insert>
+        <insert tableName="roles">
+            <column name="name" value="ROLE_BUSINESS"/>
+            <column name="description" value="Business banking user"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
