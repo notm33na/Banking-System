@@ -10,6 +10,8 @@ import com.virtbank.exception.ResourceNotFoundException;
 import com.virtbank.repository.AccountRepository;
 import com.virtbank.repository.BusinessRepository;
 import com.virtbank.repository.PayrollRepository;
+import com.virtbank.service.EmailService;
+import com.virtbank.service.NotificationService;
 import com.virtbank.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,8 @@ public class BusinessPayrollService {
     private final BusinessRepository businessRepository;
     private final AccountRepository accountRepository;
     private final SecurityUtils securityUtils;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Transactional
     public PayrollResponse createPayroll(CreatePayrollRequest req) {
@@ -73,7 +77,23 @@ public class BusinessPayrollService {
         // Mark as processed
         payroll.setStatus(PayrollStatus.PROCESSED);
         payroll.setProcessedAt(LocalDateTime.now());
-        payroll.getItems().forEach(item -> item.setStatus(PayrollItemStatus.COMPLETED));
+        payroll.getItems().forEach(item -> {
+            item.setStatus(PayrollItemStatus.COMPLETED);
+
+            // Send payroll confirmation to each employee
+            String cycle = payroll.getPayPeriodStart() + " – " + payroll.getPayPeriodEnd();
+            emailService.sendPayrollConfirmation(
+                    item.getEmployeeAccount(), // used as email placeholder — in production map to user email
+                    item.getEmployeeName(),
+                    item.getAmount(),
+                    cycle);
+        });
+
+        // Notify the business owner
+        Long ownerId = payroll.getBusiness().getOwner().getId();
+        notificationService.createNotification(ownerId, "PAYROLL",
+                "Payroll processed: " + payroll.getTotalAmount() + " disbursed to " +
+                payroll.getItems().size() + " employees.");
 
         return toResponse(payrollRepository.save(payroll));
     }

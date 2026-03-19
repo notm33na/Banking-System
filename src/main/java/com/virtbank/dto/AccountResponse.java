@@ -1,5 +1,7 @@
 package com.virtbank.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.virtbank.security.AccountNumberSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AccountResponse {
     private Long id;
+    @JsonSerialize(using = AccountNumberSerializer.class)
     private String accountNumber;
     private Long userId;
     private String ownerName;

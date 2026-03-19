@@ -1,0 +1,9 @@
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 150ms ease; }
+.modal { background: var(--bg-card); border-radius: var(--radius-lg); width: 90%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); animation: slideUp 200ms ease; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
+.header h3 { font-size: 1.1rem; }
+.close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); transition: color var(--transition); }
+.close:hover { color: var(--danger); }
+.body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

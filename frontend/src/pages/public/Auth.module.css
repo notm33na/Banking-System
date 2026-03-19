@@ -1,0 +1,8 @@
+.page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); padding: 1rem; }
+.card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); }
+.logo { font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 0.25rem; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { text-align: center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem; }
+.error { background: #fee2e2; color: #b91c1c; padding: 0.625rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 1rem; text-align: center; }
+.success { background: #dcfce7; color: #15803d; padding: 0.625rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 1rem; text-align: center; }
+.footer { text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted); }
+.footer a { color: var(--primary); font-weight: 600; }

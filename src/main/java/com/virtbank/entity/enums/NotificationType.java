@@ -3,5 +3,10 @@ package com.virtbank.entity.enums;
 public enum NotificationType {
     EMAIL,
     SMS,
-    SYSTEM
+    SYSTEM,
+    GENERAL,
+    ACCOUNT,
+    TRANSACTION,
+    LOAN,
+    PAYROLL
 }

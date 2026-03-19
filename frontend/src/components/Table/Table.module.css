@@ -1,0 +1,8 @@
+.table-wrapper { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-card); }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.75rem 1rem; font-size: 0.875rem; white-space: nowrap; }
+th { background: var(--bg); color: var(--text-secondary); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+td { border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f8fafc; }
+.actions { display: flex; gap: 0.5rem; }

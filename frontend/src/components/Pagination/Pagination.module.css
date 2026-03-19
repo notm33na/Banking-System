@@ -1,0 +1,5 @@
+.pagination { display: flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 1rem 0; }
+.btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-secondary); font-size: 0.8rem; cursor: pointer; transition: all var(--transition); }
+.btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }

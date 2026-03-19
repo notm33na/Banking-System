@@ -1,0 +1,71 @@
+/* ─── Skeleton Loader Utilities ──────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-card, #1e293b) 25%,
+    var(--bg-main, #283548) 50%,
+    var(--bg-card, #1e293b) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* StatCard skeleton */
+.skeletonCard {
+  composes: skeleton;
+  height: 120px;
+  border-radius: 12px;
+}
+
+/* Table row skeleton */
+.skeletonRow {
+  composes: skeleton;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+/* Text line skeleton */
+.skeletonText {
+  composes: skeleton;
+  height: 16px;
+  margin-bottom: 8px;
+}
+
+.skeletonTextShort {
+  composes: skeletonText;
+  width: 60%;
+}
+
+.skeletonTextMedium {
+  composes: skeletonText;
+  width: 80%;
+}
+
+/* Chart skeleton */
+.skeletonChart {
+  composes: skeleton;
+  height: 280px;
+  border-radius: 12px;
+}
+
+/* Grid for stat cards */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Dashboard skeleton layout */
+.dashboardSkeleton {
+  padding: 0;
+}
+
+.dashboardSkeleton .skeletonGrid {
+  margin-bottom: 2rem;
+}

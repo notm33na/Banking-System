@@ -10,6 +10,8 @@ import com.virtbank.entity.enums.PaymentStatus;
 import com.virtbank.exception.ResourceNotFoundException;
 import com.virtbank.repository.LoanPaymentRepository;
 import com.virtbank.repository.LoanRepository;
+import com.virtbank.service.EmailService;
+import com.virtbank.service.NotificationService;
 import com.virtbank.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,8 @@ public class AdminLoanService {
     private final LoanRepository loanRepository;
     private final LoanPaymentRepository loanPaymentRepository;
     private final SecurityUtils securityUtils;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
 
     public Page<LoanResponse> getAllLoans(Pageable pageable) {
         return loanRepository.findAll(pageable).map(this::toLoanResponse);
@@ -79,10 +83,18 @@ public class AdminLoanService {
             // Auto-generate repayment schedule
             generateRepaymentSchedule(savedLoan);
 
+            // Send loan status email + notification
+            sendLoanNotification(savedLoan, "APPROVED");
+
             return toLoanResponse(savedLoan);
         } else {
             loan.setStatus(LoanStatus.REJECTED);
-            return toLoanResponse(loanRepository.save(loan));
+            Loan savedLoan = loanRepository.save(loan);
+
+            // Send rejection email + notification
+            sendLoanNotification(savedLoan, "REJECTED");
+
+            return toLoanResponse(savedLoan);
         }
     }
 
@@ -93,6 +105,15 @@ public class AdminLoanService {
     }
 
     // ── helpers ──────────────────────────────────────────────────────
+
+    private void sendLoanNotification(Loan loan, String status) {
+        if (loan.getUser() != null) {
+            String name = loan.getUser().getFirstName() + " " + loan.getUser().getLastName();
+            emailService.sendLoanStatusEmail(loan.getUser().getEmail(), name, status, loan.getAmount());
+            notificationService.createNotification(loan.getUser().getId(), "LOAN",
+                    "Your loan application for " + loan.getAmount() + " has been " + status + ".");
+        }
+    }
 
     private void generateRepaymentSchedule(Loan loan) {
         BigDecimal remainingBalance = loan.getAmount();

@@ -9,6 +9,8 @@ import com.virtbank.exception.InsufficientFundsException;
 import com.virtbank.exception.ResourceNotFoundException;
 import com.virtbank.repository.AccountRepository;
 import com.virtbank.repository.TransactionRepository;
+import com.virtbank.service.EmailService;
+import com.virtbank.service.NotificationService;
 import com.virtbank.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,8 @@ public class CustomerTransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final SecurityUtils securityUtils;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Transactional
     public TransactionResponse deposit(DepositRequest req) {
@@ -43,7 +47,16 @@ public class CustomerTransactionService {
                 .description(req.getDescription() != null ? req.getDescription() : "Deposit")
                 .status(TransactionStatus.COMPLETED)
                 .build();
-        return toResponse(transactionRepository.save(tx));
+        TransactionResponse response = toResponse(transactionRepository.save(tx));
+
+        // Send alerts
+        String userName = account.getUser().getFirstName() + " " + account.getUser().getLastName();
+        String email = account.getUser().getEmail();
+        emailService.sendTransactionAlert(email, userName, "DEPOSIT", req.getAmount(), account.getBalance());
+        notificationService.createNotification(account.getUser().getId(), "TRANSACTION",
+                "Deposit of " + req.getAmount() + " processed successfully.");
+
+        return response;
     }
 
     @Transactional
@@ -65,7 +78,16 @@ public class CustomerTransactionService {
                 .description(req.getDescription() != null ? req.getDescription() : "Withdrawal")
                 .status(TransactionStatus.COMPLETED)
                 .build();
-        return toResponse(transactionRepository.save(tx));
+        TransactionResponse response = toResponse(transactionRepository.save(tx));
+
+        // Send alerts
+        String userName = account.getUser().getFirstName() + " " + account.getUser().getLastName();
+        String email = account.getUser().getEmail();
+        emailService.sendTransactionAlert(email, userName, "WITHDRAWAL", req.getAmount(), account.getBalance());
+        notificationService.createNotification(account.getUser().getId(), "TRANSACTION",
+                "Withdrawal of " + req.getAmount() + " processed successfully.");
+
+        return response;
     }
 
     @Transactional
@@ -97,7 +119,25 @@ public class CustomerTransactionService {
                 .sourceAccount(source)
                 .destinationAccount(dest)
                 .build();
-        return toResponse(transactionRepository.save(tx));
+        TransactionResponse response = toResponse(transactionRepository.save(tx));
+
+        // Send alerts to sender
+        String senderName = source.getUser().getFirstName() + " " + source.getUser().getLastName();
+        emailService.sendTransactionAlert(source.getUser().getEmail(), senderName,
+                "TRANSFER (SENT)", req.getAmount(), source.getBalance());
+        notificationService.createNotification(source.getUser().getId(), "TRANSACTION",
+                "Transfer of " + req.getAmount() + " sent successfully.");
+
+        // Send alerts to receiver
+        if (dest.getUser() != null) {
+            String receiverName = dest.getUser().getFirstName() + " " + dest.getUser().getLastName();
+            emailService.sendTransactionAlert(dest.getUser().getEmail(), receiverName,
+                    "TRANSFER (RECEIVED)", req.getAmount(), dest.getBalance());
+            notificationService.createNotification(dest.getUser().getId(), "TRANSACTION",
+                    "Transfer of " + req.getAmount() + " received.");
+        }
+
+        return response;
     }
 
     @Transactional

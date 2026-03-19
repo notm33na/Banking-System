@@ -22,12 +22,16 @@ public class JwtUtils {
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
+    @Value("${app.jwt.admin-expiration-ms:28800000}")
+    private long adminExpirationMs;
+
     /**
      * Generate a signed JWT with userId, email, and role claims.
      */
     public String generateToken(Long userId, String email, String role) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        long expiry = "ROLE_ADMIN".equals(role) ? adminExpirationMs : jwtExpirationMs;
+        Date expiryDate = new Date(now.getTime() + expiry);
 
         return Jwts.builder()
                 .subject(email)
@@ -77,6 +81,13 @@ public class JwtUtils {
             logger.error("JWT claims string is empty: {}", e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * Extract the expiration date from a token.
+     */
+    public java.util.Date extractExpiration(String token) {
+        return extractAllClaims(token).getExpiration();
     }
 
     // ── Private helpers ──────────────────────────────────────────────

@@ -10,6 +10,9 @@ import com.virtbank.entity.enums.UserType;
 import com.virtbank.repository.RoleRepository;
 import com.virtbank.repository.UserRepository;
 import com.virtbank.security.JwtUtils;
+import com.virtbank.service.EmailService;
+import com.virtbank.service.NotificationService;
+import com.virtbank.service.TokenBlacklistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,6 +38,9 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // ═════════════════════════════════════════════════════════════════
     // POST  /api/auth/register
@@ -82,6 +88,12 @@ public class AuthController {
         String token = jwtUtils.generateToken(
                 savedUser.getId(), savedUser.getEmail(), roleName);
 
+        // 6. Send welcome email + in-app notification
+        emailService.sendWelcomeEmail(savedUser.getEmail(),
+                savedUser.getFirstName() + " " + savedUser.getLastName());
+        notificationService.createNotification(savedUser.getId(), "ACCOUNT",
+                "Welcome to VIRTBANK! Your account is now active.");
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new AuthResponse(token, savedUser.getId(),
                         savedUser.getEmail(), roleName));
@@ -118,5 +130,17 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 new AuthResponse(token, user.getId(), user.getEmail(), role));
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // POST  /api/auth/logout
+    // ═════════════════════════════════════════════════════════════════
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+            tokenBlacklistService.blacklist(jwt);
+        }
+        return ResponseEntity.ok(java.util.Map.of("message", "Logged out successfully"));
     }
 }

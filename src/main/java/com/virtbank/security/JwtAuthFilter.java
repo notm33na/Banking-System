@@ -1,5 +1,6 @@
 package com.virtbank.security;
 
+import com.virtbank.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -38,6 +40,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String jwt = parseJwtFromHeader(request);
 
             if (jwt != null && jwtUtils.validateToken(jwt)) {
+                // Check token blacklist
+                if (tokenBlacklistService.isBlacklisted(jwt)) {
+                    logger.debug("Token is blacklisted");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 String email = jwtUtils.extractEmail(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);

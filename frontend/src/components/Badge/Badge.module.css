@@ -1,0 +1,6 @@
+.badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; }
+.green  { background: #dcfce7; color: #15803d; }
+.red    { background: #fee2e2; color: #b91c1c; }
+.yellow { background: #fef3c7; color: #92400e; }
+.gray   { background: #f1f5f9; color: #64748b; }
+.blue   { background: #dbeafe; color: #1e40af; }
